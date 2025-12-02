@@ -1,0 +1,122 @@
+/* Mint/Ayurveda theme (Option A) */
+:root{
+  --bg:#f4fff6;
+  --card:#ffffff;
+  --muted:#60756a;
+  --accent:#1c8c64;
+  --accent-2:#2aa36a;
+  --accent-dark:#0f6b46;
+  --radius:12px;
+  --shadow:0 6px 22px rgba(28,140,100,0.06);
+  --soft-shadow:0 4px 14px rgba(16,30,20,0.05);
+}
+
+*{box-sizing:border-box;font-family:'Poppins',sans-serif;margin:0;padding:0}
+body{background:var(--bg);color:#123;line-height:1.5}
+
+.container{max-width:1150px;margin:0 auto;padding:20px}
+
+/* NAV */
+.topnav{padding:12px 0;background:transparent}
+.nav-inner{display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px}
+.title{font-weight:700;color:var(--accent-dark);font-size:22px}
+.nav-links{display:flex;gap:16px;list-style:none}
+.nav-links a{color:var(--accent-dark);text-decoration:none;font-weight:600}
+
+/* HERO */
+.hero{padding:40px 0}
+.hero-grid{display:flex;gap:24px}
+.hero-left{flex:1}
+.hero-left h1{color:var(--accent-dark);font-size:32px;margin-bottom:8px}
+.hero-tag{color:var(--muted);margin-bottom:18px}
+
+.btn{
+  padding:10px 16px;border-radius:10px;font-weight:600;cursor:pointer;text-decoration:none;
+}
+.btn.primary{
+  background:linear-gradient(180deg,var(--accent),var(--accent-2));
+  color:white;box-shadow:0 6px 16px rgba(26,120,80,0.12);
+}
+.btn.ghost{
+  border:1px solid rgba(12,80,60,0.1);color:var(--accent-dark);
+  background:white;
+}
+
+/* HERO RIGHT CARD */
+.card{
+  background:white;padding:20px;border-radius:var(--radius);
+  box-shadow:var(--soft-shadow);
+}
+
+.metrics{display:flex;gap:12px;margin-top:12px}
+.metric{flex:1;background:#f8fefb;border-radius:12px;padding:14px;text-align:center}
+.metric-big{font-size:22px;font-weight:700;color:var(--accent-dark)}
+.metric-label{margin-top:6px;color:var(--muted);font-size:12px}
+
+.stream-controls{display:flex;gap:10px;margin-top:14px}
+.stream-input{padding:10px;border-radius:8px;border:1px solid #dcefe3;width:80px}
+
+.stream-log{
+  margin-top:12px;height:120px;overflow:auto;padding:8px;
+  background:#f4fbf7;border-radius:10px;border:1px solid #dcefe3;
+}
+
+/* MAIN GRID */
+.main-grid{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:20px;
+}
+
+/* INPUT FORM */
+.form-grid label{font-weight:600;color:var(--accent-dark);margin-bottom:16px;display:block}
+
+input[type="number"],select,input[type="range"]{
+  width:100%;padding:10px;border-radius:8px;border:1px solid #dcefe3;
+  margin-top:6px;background:white;
+}
+
+.range-row{display:flex;gap:10px;align-items:center}
+.slider-value{
+  padding:6px 10px;background:#e9f7ef;border-radius:8px;color:var(--accent-dark);
+}
+
+/* SENSOR ASIDE */
+.sensor-cards{display:flex;gap:10px;margin-top:12px}
+.sensor-card{text-align:center;flex:1;background:#f8fefb;border-radius:12px;padding:16px;box-shadow:var(--soft-shadow)}
+.sensor-value{font-size:20px;font-weight:bold;color:var(--accent-dark)}
+.sensor-label{margin-top:6px;color:var(--muted);font-size:12px}
+
+.stream-row{display:flex;gap:10px;margin-top:14px}
+
+/* RESULTS */
+.wide{grid-column:1/-1}
+.result-panel{display:flex;gap:20px;margin-top:10px}
+.result-right{background:#f8fefb !important;border:1px solid #dcefe3}
+
+/* TABLE */
+.table{margin-top:12px;background:white;border-radius:12px;padding:16px;box-shadow:var(--soft-shadow)}
+.table table{width:100%;border-collapse:collapse}
+.table th{text-align:left;padding-bottom:8px;color:var(--accent-dark)}
+.table td{padding:8px 4px;border-top:1px solid #eef6f0}
+
+/* FEEDBACK */
+.feedback-row{display:flex;gap:12px;margin-top:10px;align-items:center}
+#feedbackValue{font-weight:700;color:var(--accent-dark)}
+
+/* ARCHITECTURE */
+.arch-grid{display:flex;gap:14px;margin-top:14px}
+.arch-box{
+  flex:1;background:#f8fefb;padding:16px;border-radius:12px;border:1px solid #dcefe3;
+}
+.arch-box h4{color:var(--accent-dark);margin-bottom:6px}
+
+/* FOOTER */
+.site-footer{text-align:center;margin-top:30px;color:var(--muted);padding:20px 0}
+
+/* RESPONSIVE */
+@media (max-width:900px){
+  .main-grid{grid-template-columns:1fr}
+  .hero-grid{flex-direction:column}
+}
