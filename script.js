@@ -1,403 +1,119 @@
-// AgnoSutra frontend logic (enhanced)
-// Keeps original KB + model + rule engine and adds XAI & feedback persistence
-
-// -------------------- Knowledge base --------------------
-const KNOWLEDGE_BASE = {
-  "Vata": {
-    characteristics: ["light","dry","cold","active"],
-    diet: ["Warm, oily, grounding foods","Cooked oats, soups, ghee"],
-    herbs: ["Ashwagandha","Triphala"],
-    yoga: ["Grounding Hatha sequences, slow breathing"],
-    routine: ["Regular meals","Massage with warm oil","Sleep early"]
-  },
-  "Pitta": {
-    characteristics: ["hot","sharp","intense"],
-    diet: ["Cooling foods","Avoid spicy, fermented food"],
-    herbs: ["Brahmi","Neem"],
-    yoga: ["Cooling restorative poses","Pranayama"],
-    routine: ["Avoid midday heat","Sleep early","Calming activities"]
-  },
-  "Kapha": {
-    characteristics: ["heavy","slow","stable"],
-    diet: ["Light meals","Avoid heavy dairy and sugars"],
-    herbs: ["Ginger","Turmeric"],
-    yoga: ["Energizing sequences","Cardio"],
-    routine: ["Active mornings","Light meals","Dry brushing"]
-  }
-};
-
-// -------------------- Sample dataset (display only) --------------------
-const SAMPLE_DATA = [
-  {heart_rate:74, sleep_hours:7.0, diet_type:"Vegetarian", stress:2, mood:3, water:2000, dosha:"Pitta"},
-  {heart_rate:82, sleep_hours:5.5, diet_type:"Mixed", stress:7, mood:2, water:1500, dosha:"Vata"},
-  {heart_rate:68, sleep_hours:8.0, diet_type:"Vegan", stress:3, mood:4, water:2200, dosha:"Kapha"},
-];
-
-// Diet mapping for numeric encoding
-const DIET_MAP = {"Vegetarian":0, "Mixed":1, "Vegan":2, "Non-Veg":3};
-
-// -------------------- Utility functions --------------------
-function htmlEscape(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
-
-// Normalize numeric to 0-1 (simple)
-function normalize(val, min, max){
-  if(max === min) return 0.5;
-  return (val - min) / (max - min);
+/* Mint/Ayurveda theme (Option A) */
+:root{
+  --bg:#f4fff6;        /* faint mint background */
+  --card:#ffffff;
+  --muted:#60756a;
+  --accent:#1c8c64;    /* emerald */
+  --accent-2:#2aa36a;
+  --accent-dark:#0f6b46;
+  --glass: rgba(255,255,255,0.6);
+  --radius:12px;
+  --shadow: 0 6px 22px rgba(28,140,100,0.06);
+  --soft-shadow: 0 4px 14px rgba(16,30,20,0.04);
 }
 
-// Simulate sensors
-function simulateSensorValues(){
-  const hr = Math.round(randomNormal(75,6));
-  const temp = (randomNormal(36.6,0.4)).toFixed(2);
-  const hum = Math.round(Math.random()*40 + 30);
-  return {heart_rate:hr, temp, hum};
+/* base */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  background:var(--bg);
+  color:#123;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  line-height:1.45;
 }
 
-// small normal RNG
-function randomNormal(mu=0, sigma=1){
-  // Box-Muller
-  let u=0,v=0;
-  while(u===0) u=Math.random();
-  while(v===0) v=Math.random();
-  return mu + sigma*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
-}
+/* layout */
+.container{max-width:1150px;margin:0 auto;padding:20px}
+.topnav{background:transparent;padding:10px 0}
+.nav-inner{display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{font-size:20px}
+.title{font-weight:700;color:var(--accent-dark);font-size:20px}
+.nav-links{list-style:none;display:flex;gap:14px;margin:0;padding:0}
+.nav-links a{color:var(--accent-dark);text-decoration:none;font-weight:600}
 
-// -------------------- Preprocess -> "Model" (weighted score) --------------------
-function modelPredict(features){
-  const scores = {Vata:0, Pitta:0, Kapha:0};
-  const hr = features.heart_rate;
-  const sleep = features.sleep_hours;
-  const stress = features.stress;
-  const mood = features.mood;
-  const water = features.water;
-  const dietEnc = DIET_MAP[features.diet_type] || 0;
+/* HERO */
+.hero{padding:28px 0}
+.hero-grid{display:flex;gap:24px;align-items:stretch}
+.hero-left{flex:1}
+.hero-right{width:360px}
+.hero h1{font-size:28px;margin:0;color:var(--accent-dark)}
+.hero-tag{color:var(--muted);margin-top:8px}
+.hero-ctas{margin-top:14px;display:flex;gap:10px}
+.btn{border:0;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:600}
+.btn.primary{background:linear-gradient(180deg,var(--accent),var(--accent-2));color:white;box-shadow:0 6px 16px rgba(26,120,80,0.12)}
+.btn.ghost{background:transparent;border:1px solid rgba(12,80,60,0.06);color:var(--accent-dark)}
+.btn.small{padding:6px 10px;font-size:13px;border-radius:8px}
 
-  const n_hr = normalize(hr, 50, 110);         // 0..1
-  const n_sleep = normalize(sleep, 0, 12);     // 0..1
-  const n_stress = normalize(stress, 0, 10);   // 0..1
-  const n_mood = normalize(mood, 1, 5);        // 0..1
-  const n_water = normalize(water, 0, 4000);   // 0..1
+/* hero right card */
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--soft-shadow);padding:16px}
+.metrics{display:flex;gap:10px;align-items:center;margin-top:8px}
+.metric{flex:1;background:linear-gradient(180deg,#ffffff,#fbfff9);padding:10px;border-radius:10px;text-align:center}
+.metric-big{font-size:20px;font-weight:700;color:var(--accent-dark)}
+.metric-label{font-size:13px;color:var(--muted);margin-top:6px}
+.stream-controls{display:flex;gap:8px;margin-top:12px;align-items:center}
+.stream-input{width:70px;padding:8px;border-radius:8px;border:1px solid #e6efe6}
 
-  scores['Pitta'] += 0.5*n_hr + 0.6*n_stress + 0.3*(1-n_sleep);
-  scores['Vata'] += 0.5*(1-n_sleep) + 0.4*n_stress + 0.3*(dietEnc===1 ? 1 : 0);
-  scores['Kapha'] += 0.6*(1 - n_hr) + 0.5*n_sleep + 0.3*(dietEnc===0 ? 0.5 : 0);
+/* feature row */
+.feature-row{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.feat{background:rgba(40,120,80,0.06);color:var(--accent-dark);padding:8px 10px;border-radius:10px;font-weight:600}
 
-  scores['Vata'] += 0.2*(1-n_mood);
-  scores['Kapha'] += 0.2*n_water;
-  scores['Pitta'] += 0.1*(n_mood>0.6 ? 0.4 : 0);
+/* MAIN GRID */
+.main-grid{display:grid;grid-template-columns:2fr 1fr;gap:18px;align-items:start;margin-top:10px}
 
-  const entries = Object.entries(scores).sort((a,b)=>b[1]-a[1]);
-  const basePred = entries[0][0];
-  return {scores, basePred, scoresSorted:entries};
-}
+/* forms */
+.form-grid label{display:block;margin-bottom:10px;font-weight:600;color:var(--accent-dark)}
+input[type="number"], select, input[type="range"]{width:100%;padding:10px;border-radius:8px;border:1px solid #e9f5ee;background:transparent}
+.range-row{display:flex;align-items:center;gap:10px}
+.slider-value{background:#eef9f2;padding:6px 8px;border-radius:8px;color:var(--accent-dark);font-weight:600}
+.checkbox{display:flex;align-items:center;gap:8px}
 
-// -------------------- Rule engine --------------------
-function ruleEngine(inputs, basePrediction){
-  const votes = {Vata:0, Pitta:0, Kapha:0};
-  votes[basePrediction] += 1;
+/* sensor aside */
+.sensor-cards{display:flex;gap:10px;justify-content:space-between;margin:8px 0}
+.sensor-card{flex:1;background:linear-gradient(180deg,#fff,#f7fff7);border-radius:10px;padding:12px;text-align:center;box-shadow:var(--soft-shadow)}
+.sensor-value{font-weight:700;color:var(--accent-dark);font-size:18px}
+.sensor-label{font-size:13px;color:var(--muted);margin-top:6px}
+.stream-row{display:flex;gap:8px;align-items:center}
+.stream-log{height:120px;overflow:auto;background:#fbfff9;border-radius:8px;padding:8px;border:1px solid #eef6ee;margin-top:10px}
 
-  const hr = inputs.heart_rate;
-  const sleep = inputs.sleep_hours;
-  const stress = inputs.stress;
-  const diet = inputs.diet_type;
+/* chart */
+.chart-wrap{margin-top:12px}
 
-  if(hr > 85 || stress >= 7){
-    votes['Pitta'] += 1;
-  }
-  if(sleep < 6 || diet === "Mixed"){
-    votes['Vata'] += 1;
-  }
-  if(hr < 70 && sleep >= 8){
-    votes['Kapha'] += 1;
-  }
-  if(stress >= 8 && sleep < 5){
-    votes['Vata'] += 1;
-  }
+/* result panels */
+.result-panel{display:flex;gap:18px;align-items:flex-start}
+.result-left{flex:1}
+.result-right{flex:1;padding:14px;background:linear-gradient(180deg,#fbfff9,#ffffff);border-radius:10px}
 
-  const final = Object.entries(votes).sort((a,b)=>b[1]-a[1])[0][0];
-  return {final, votes};
-}
+/* xai */
+.xai.small{padding:12px;margin-top:12px}
+.small-list{margin:8px 0 0 16px;color:var(--muted)}
 
-// -------------------- Recommendations --------------------
-function generateRecommendations(dosha){
-  const kb = KNOWLEDGE_BASE[dosha];
-  if(!kb) return {dosha, summary: "No KB", diet:[], herbs:[], yoga:[], routine:[]};
-  return {
-    dosha,
-    summary: `You are ${dosha}-dominant today. Recommended: ${kb.diet.join(", ")}.`,
-    diet: kb.diet,
-    herbs: kb.herbs,
-    yoga: kb.yoga,
-    routine: kb.routine
-  };
-}
+/* table */
+.table{margin-top:12px;padding:12px;background:linear-gradient(180deg,#fff,#fbfff9);border-radius:12px;box-shadow:var(--soft-shadow)}
+.table table{width:100%;border-collapse:collapse}
+.table th{text-align:left;padding:10px;color:var(--accent-dark)}
+.table td{padding:10px;border-top:1px solid #f2f9f2;color:#123}
 
-// -------------------- UI interactions --------------------
-document.addEventListener('DOMContentLoaded', () => {
-  // Elements and sliders
-  const stressVal = document.getElementById('stressVal');
-  const moodVal = document.getElementById('moodVal');
-  const stressSlider = document.getElementById('stress');
-  const moodSlider = document.getElementById('mood');
-  stressVal.textContent = stressSlider.value;
-  moodVal.textContent = moodSlider.value;
-  stressSlider.addEventListener('input', ()=> stressVal.textContent = stressSlider.value);
-  moodSlider.addEventListener('input', ()=> moodVal.textContent = moodSlider.value);
+/* feedback */
+.feedback-row{display:flex;align-items:center;gap:12px;margin-top:8px}
+#feedbackValue{font-weight:700;color:var(--accent-dark)}
 
-  const analyzeBtn = document.getElementById('analyzeBtn');
-  const clearBtn = document.getElementById('clearBtn');
-  const startStream = document.getElementById('startStream');
-  const startStreamHero = document.getElementById('startStreamHero');
+/* architecture */
+.arch-grid{display:flex;gap:12px;margin-top:12px}
+.arch-box{flex:1;padding:14px;border-radius:12px;background:linear-gradient(180deg,#fff,#f8fff7);box-shadow:var(--soft-shadow);border:1px solid #eef6ee}
+.arch-box h4{margin:0;color:var(--accent-dark)}
 
-  analyzeBtn.addEventListener('click', onAnalyze);
-  clearBtn.addEventListener('click', onClear);
-  startStream.addEventListener('click', onStartStream);
-  if(startStreamHero) {
-    startStreamHero.addEventListener('click', onStartStreamHero);
-    document.getElementById('streamLenHero').addEventListener('change', ()=>{});
-  }
+/* footer */
+.site-footer{margin-top:28px;padding:20px 0;text-align:center;color:var(--muted)}
 
-  // feedback
-  const feedbackSlider = document.getElementById('feedbackSlider');
-  const feedbackValue = document.getElementById('feedbackValue');
-  const submitFeedback = document.getElementById('submitFeedback');
-  feedbackValue.textContent = feedbackSlider.value;
-  feedbackSlider.addEventListener('input', ()=> feedbackValue.textContent = feedbackSlider.value);
-  submitFeedback.addEventListener('click', ()=> {
-    saveFeedback(parseInt(feedbackSlider.value));
-  });
-
-  // Populate sample table
-  renderSampleTable();
-  // init chart
-  initChart();
-
-  // load any saved feedback message
-  loadFeedbackMessage();
-});
-
-function collectInputs(){
-  const sleep = parseFloat(document.getElementById('sleep').value) || 0;
-  const diet = document.getElementById('diet').value;
-  const stress = parseInt(document.getElementById('stress').value) || 0;
-  const mood = parseInt(document.getElementById('mood').value) || 3;
-  const water = parseInt(document.getElementById('water').value) || 0;
-  let heart = parseInt(document.getElementById('heart').value) || 0;
-  const simulateSensors = document.getElementById('simulateSensors').checked;
-  if(heart === 0 && simulateSensors){
-    const s = simulateSensorValues();
-    heart = s.heart_rate;
-    // show simulated metrics
-    updateSensorMetrics(s.heart_rate, s.temp, s.hum);
-  }
-  return {heart_rate: heart, sleep_hours: sleep, diet_type: diet, stress, mood, water};
-}
-
-function onAnalyze(){
-  const features = collectInputs();
-  const {scores, basePred, scoresSorted} = modelPredict(features);
-  const {final, votes} = ruleEngine(features, basePred);
-  const rec = generateRecommendations(final);
-  renderResults(basePred, final, votes, scores, rec, features, scoresSorted);
-  pushChartData(features);
-}
-
-function onClear(){
-  document.getElementById('inputForm').reset();
-  document.getElementById('stressVal').textContent = "3";
-  document.getElementById('moodVal').textContent = "3";
-  document.getElementById('modelPred').textContent = "Model: —";
-  document.getElementById('finalPred').textContent = "Final: —";
-  document.getElementById('votesArea').innerHTML = "";
-  document.getElementById('recs').innerHTML = "";
-  document.getElementById('explanation').textContent = "";
-  document.getElementById('xaiList').innerHTML = "";
-}
-
-function renderResults(basePred, finalPred, votes, scores, rec, features, scoresSorted){
-  document.getElementById('modelPred').textContent = `Model: ${basePred}`;
-  document.getElementById('finalPred').textContent = `Final: ${finalPred}`;
-  document.getElementById('votesArea').innerHTML = `<strong>Rule votes:</strong> Vata ${votes.Vata}, Pitta ${votes.Pitta}, Kapha ${votes.Kapha}`;
-  document.getElementById('explanation').textContent = `Base model suggested ${basePred}. Rule engine adjusted using HR: ${features.heart_rate} bpm, sleep: ${features.sleep_hours} h, stress: ${features.stress}.`;
-
-  // XAI: list top contributing features (simple heuristic)
-  const xai = computeXAI(featuresToXAI(features), scoresSorted);
-  const xaiList = document.getElementById('xaiList');
-  xaiList.innerHTML = "";
-  xai.forEach(it => {
-    const li = document.createElement('li');
-    li.textContent = `${it.feature}: ${it.reason}`;
-    xaiList.appendChild(li);
-  });
-
-  // recs
-  const recDiv = document.getElementById('recs');
-  recDiv.innerHTML = `<p><strong>${rec.summary}</strong></p>`;
-  let html = "<h4>Diet</h4><ul>";
-  rec.diet.forEach(d=> html += `<li>${htmlEscape(d)}</li>`);
-  html += "</ul><h4>Herbs</h4><ul>";
-  rec.herbs.forEach(h=> html += `<li>${htmlEscape(h)}</li>`);
-  html += "</ul><h4>Yoga</h4><ul>";
-  rec.yoga.forEach(y=> html += `<li>${htmlEscape(y)}</li>`);
-  html += "</ul><h4>Routine</h4><ul>";
-  rec.routine.forEach(r=> html += `<li>${htmlEscape(r)}</li>`);
-  html += "</ul>";
-  recDiv.innerHTML += html;
-}
-
-// simple XAI helper: describe influence of features
-function featuresToXAI(f){
-  return [
-    {name:'heart_rate', value:f.heart_rate},
-    {name:'sleep_hours', value:f.sleep_hours},
-    {name:'stress', value:f.stress},
-    {name:'mood', value:f.mood},
-    {name:'diet_type', value:f.diet_type},
-    {name:'water', value:f.water}
-  ];
-}
-function computeXAI(feats, scoresSorted){
-  const out = [];
-  // heart rate
-  const hr = feats.find(x=>x.name==='heart_rate').value;
-  if(hr > 85) out.push({feature:'Heart rate', reason:`High (${hr} bpm) → supports Pitta`});
-  else if(hr < 65) out.push({feature:'Heart rate', reason:`Low (${hr} bpm) → supports Kapha/Vata`});
-  // sleep
-  const sl = feats.find(x=>x.name==='sleep_hours').value;
-  if(sl < 6) out.push({feature:'Sleep', reason:`Low sleep (${sl} h) → supports Vata`});
-  else if(sl >= 8) out.push({feature:'Sleep', reason:`High sleep (${sl} h) → supports Kapha`});
-  // stress
-  const st = feats.find(x=>x.name==='stress').value;
-  if(st >= 7) out.push({feature:'Stress', reason:`High stress (${st}) → supports Pitta/Vata`});
-  // mood
-  const md = feats.find(x=>x.name==='mood').value;
-  if(md <= 2) out.push({feature:'Mood', reason:`Low mood (${md}) → Vata influence`});
-  // diet
-  const dt = feats.find(x=>x.name==='diet_type').value;
-  if(dt === 'Mixed') out.push({feature:'Diet', reason:`Mixed/irregular diet → Vata`});
-  // top model scores
-  out.push({feature:'Model scores', reason:`Top: ${scoresSorted.map(s=>s[0]).join(', ')}`});
-  return out;
-}
-
-// -------------------- Chart: simple metrics --------------------
-let metricsChart;
-function initChart(){
-  const ctx = document.getElementById('metricsChart').getContext('2d');
-  metricsChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: [],
-      datasets: [
-        {label:'Heart Rate', data:[], fill:false, tension:0.2},
-        {label:'Sleep (h)', data:[], fill:false, tension:0.2},
-      ]
-    },
-    options: {
-      responsive: true,
-      interaction:{mode:'index',intersect:false},
-      scales: { y: { beginAtZero: true } }
-    }
-  });
-}
-
-function pushChartData(features){
-  const labels = metricsChart.data.labels;
-  labels.push(new Date().toLocaleTimeString());
-  metricsChart.data.datasets[0].data.push(features.heart_rate);
-  metricsChart.data.datasets[1].data.push(features.sleep_hours);
-  if(labels.length>12){
-    labels.shift();
-    metricsChart.data.datasets.forEach(ds=> ds.data.shift());
-  }
-  metricsChart.update();
-}
-
-// -------------------- Sample table display --------------------
-function renderSampleTable(){
-  const div = document.getElementById('sampleTable');
-  let html = "<table style='width:100%;border-collapse:collapse'><thead><tr>";
-  html += "<th style='text-align:left;padding:6px'>Heart</th><th>Sleep</th><th>Diet</th><th>Stress</th><th>Mood</th><th>Water</th><th>Dosha</th></tr></thead><tbody>";
-  SAMPLE_DATA.forEach(r=>{
-    html += `<tr><td style='padding:6px'>${r.heart_rate}</td><td>${r.sleep_hours}</td><td>${r.diet_type}</td><td>${r.stress}</td><td>${r.mood}</td><td>${r.water}</td><td>${r.dosha}</td></tr>`;
-  });
-  html += "</tbody></table>";
-  div.innerHTML = html;
-}
-
-// -------------------- Sensor simulation stream --------------------
-async function onStartStream(){
-  const len = parseInt(document.getElementById('streamLen').value) || 6;
-  const log = document.getElementById('streamLog');
-  log.innerHTML = "";
-  for(let i=0;i<len;i++){
-    const s = simulateSensorValues();
-    updateSensorMetrics(s.heart_rate, s.temp, s.hum);
-    const line = document.createElement('div');
-    line.textContent = `${new Date().toLocaleTimeString()} — HR: ${s.heart_rate} bpm, Temp: ${s.temp}°C, Humidity: ${s.hum}%`;
-    log.prepend(line);
-    await new Promise(r=> setTimeout(r, 500));
-  }
-}
-
-async function onStartStreamHero(){
-  const len = parseInt(document.getElementById('streamLenHero').value) || 6;
-  const log = document.getElementById('streamLogHero');
-  log.innerHTML = "";
-  for(let i=0;i<len;i++){
-    const s = simulateSensorValues();
-    updateHeroSensorMetrics(s.heart_rate, s.temp, s.hum);
-    const line = document.createElement('div');
-    line.textContent = `${new Date().toLocaleTimeString()} — HR: ${s.heart_rate} bpm, Temp: ${s.temp}°C`;
-    log.prepend(line);
-    await new Promise(r=> setTimeout(r, 450));
-  }
-}
-
-// update the small sensor metric cards
-function updateSensorMetrics(hr, temp, hum){
-  document.getElementById('hrMetricAside').textContent = hr + " bpm";
-  document.getElementById('tempMetricAside').textContent = temp + " °C";
-  document.getElementById('humMetricAside').textContent = hum + " %";
-  // also mirror to hero small display if present
-  const hrHero = document.getElementById('hrMetric');
-  if(hrHero) hrHero.textContent = hr + " bpm";
-  const tempHero = document.getElementById('tempMetric');
-  if(tempHero) tempHero.textContent = temp + " °C";
-  const humHero = document.getElementById('humMetric');
-  if(humHero) humHero.textContent = hum + " %";
-}
-function updateHeroSensorMetrics(hr, temp, hum){
-  const hrHero = document.getElementById('hrMetric');
-  if(hrHero) hrHero.textContent = hr + " bpm";
-  const tempHero = document.getElementById('tempMetric');
-  if(tempHero) tempHero.textContent = temp + " °C";
-  const humHero = document.getElementById('humMetric');
-  if(humHero) humHero.textContent = hum + " %";
-}
-
-// -------------------- Feedback persistence (frontend only) --------------------
-function saveFeedback(val){
-  if(typeof(Storage) !== "undefined"){
-    const now = new Date().toISOString();
-    const payload = {value:val, time:now};
-    // maintain small array
-    let arr = JSON.parse(localStorage.getItem('agno_feedback') || "[]");
-    arr.push(payload);
-    if(arr.length > 50) arr.shift();
-    localStorage.setItem('agno_feedback', JSON.stringify(arr));
-    document.getElementById('feedbackMsg').textContent = "Thanks — feedback saved locally (demo).";
-  } else {
-    document.getElementById('feedbackMsg').textContent = "Feedback not supported in this browser.";
-  }
-  loadFeedbackMessage();
-}
-function loadFeedbackMessage(){
-  const arr = JSON.parse(localStorage.getItem('agno_feedback') || "[]");
-  if(arr.length === 0){
-    document.getElementById('feedbackMsg').textContent = "No feedback recorded yet.";
-  } else {
-    const last = arr[arr.length-1];
-    document.getElementById('feedbackMsg').textContent = `Last feedback: ${last.value} (on ${new Date(last.time).toLocaleString()})`;
-  }
+/* responsiveness */
+@media(max-width:960px){
+  .main-grid{grid-template-columns:1fr}
+  .hero-grid{flex-direction:column}
+  .hero-right{width:100%}
+  .nav-links{display:none}
+  .feature-row{gap:8px}
 }
