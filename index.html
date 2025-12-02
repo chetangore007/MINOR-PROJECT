@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AgnoSutra Prototype</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Chart.js for simple charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <h1>AgnoSutra — Prototype</h1>
+      <p class="muted">Manual inputs + simulated sensors → Dosha classification → Recommendations</p>
+    </div>
+  </header>
+
+  <main class="container grid">
+    <section class="card">
+      <h2>User Input</h2>
+      <form id="inputForm">
+        <label>Sleep hours:
+          <input type="number" id="sleep" name="sleep" min="0" max="12" step="0.5" value="7">
+        </label>
+
+        <label>Diet type:
+          <select id="diet" name="diet">
+            <option>Vegetarian</option>
+            <option>Mixed</option>
+            <option>Vegan</option>
+            <option>Non-Veg</option>
+          </select>
+        </label>
+
+        <label>Stress level (0-10):
+          <input type="range" id="stress" name="stress" min="0" max="10" value="3">
+          <span id="stressVal">3</span>
+        </label>
+
+        <label>Mood (1-5):
+          <input type="range" id="mood" name="mood" min="1" max="5" value="3">
+          <span id="moodVal">3</span>
+        </label>
+
+        <label>Water intake (ml):
+          <input type="number" id="water" name="water" min="0" step="50" value="1800">
+        </label>
+
+        <label>Heart Rate (bpm) - optional:
+          <input type="number" id="heart" name="heart" min="0" step="1" value="0">
+          <small class="muted">Leave 0 to auto-simulate</small>
+        </label>
+
+        <label><input type="checkbox" id="simulateSensors" checked> Simulate sensors if heart rate = 0</label>
+
+        <div class="form-row">
+          <button id="analyzeBtn" type="button" class="btn">Analyze</button>
+          <button id="clearBtn" type="button" class="btn alt">Clear</button>
+        </div>
+      </form>
+    </section>
+
+    <aside class="card">
+      <h2>Simulated Sensors</h2>
+      <div class="sensor-row">
+        <div class="metric">
+          <div id="hrMetric" class="metric-value">--</div>
+          <div class="metric-label">Heart Rate</div>
+        </div>
+        <div class="metric">
+          <div id="tempMetric" class="metric-value">--</div>
+          <div class="metric-label">Temperature</div>
+        </div>
+        <div class="metric">
+          <div id="humMetric" class="metric-value">--</div>
+          <div class="metric-label">Humidity</div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <button id="startStream" class="btn">Start sensor stream</button>
+        <input type="number" id="streamLen" value="6" min="1" max="30" class="stream-input">
+      </div>
+
+      <div id="streamLog" class="stream-log"></div>
+    </aside>
+
+    <section class="card wide">
+      <h2>Dosha Analysis & Recommendations</h2>
+      <div id="resultPanel" class="result-panel">
+        <div class="result-left">
+          <h3 id="modelPred">Model: —</h3>
+          <h3 id="finalPred">Final: —</h3>
+          <div id="votesArea" class="votes-area"></div>
+          <p id="explanation" class="muted"></p>
+        </div>
+        <div class="result-right">
+          <h3>Recommendations</h3>
+          <div id="recs"></div>
+        </div>
+      </div>
+
+      <div class="charts">
+        <canvas id="metricsChart" height="120"></canvas>
+      </div>
+    </section>
+
+    <section class="card wide">
+      <h2>Sample Dataset & Dashboard</h2>
+      <p class="muted">Data used for toy model demo (small sample). Replace with clinical dataset for production.</p>
+      <div id="sampleTable" class="table"></div>
+    </section>
+
+    <section class="card wide">
+      <h2>System Docs</h2>
+      <ul>
+        <li><strong>Block diagram:</strong> Input → Preprocess → Model (weighted-score) → Rule Engine → KB → Recommendations → UI</li>
+        <li><strong>Sequence:</strong> User → Web UI → JS processor → KB → Response</li>
+        <li>Include your report diagrams (block, use-case, sequence) as images in the report to match Chapter 4.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <small>AgnoSutra Prototype • Demonstration-only model • Replace scoring with ML model for production</small>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
