@@ -3,20 +3,57 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>AgnoSutra Prototype</title>
+  <title>AgnoSutra — AI-Driven Ayurvedic Diagnosis</title>
+
+  <!-- styles -->
   <link rel="stylesheet" href="styles.css">
-  <!-- Chart.js for simple charts -->
+
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <header class="site-header">
-    <div class="container">
-      <h1>AgnoSutra — Prototype</h1>
-      <p class="muted">Manual inputs + simulated sensors → Dosha classification → Recommendations</p>
+  <!-- HERO / INTRO -->
+  <header class="site-header hero">
+    <div class="container hero-inner">
+      <div class="hero-left">
+        <h1>AgnoSutra — AI-Driven Ayurvedic Diagnosis</h1>
+        <p class="muted hero-sub">Real-Time Sensors • Explainable AI • Adaptive Recommendations • IoT-ready</p>
+        <div class="hero-ctas">
+          <a href="#inputForm" class="btn hero-btn">Start Analysis</a>
+          <a href="#architecture" class="btn alt hero-btn">View Architecture</a>
+        </div>
+
+        <div class="feature-strip">
+          <div class="fs-item">🤖 AI Prediction</div>
+          <div class="fs-item">📜 Rule-based KB</div>
+          <div class="fs-item">📡 Real-Time Data</div>
+          <div class="fs-item">🔁 Adaptive Feedback</div>
+          <div class="fs-item">📊 Visual Dashboard</div>
+          <div class="fs-item">🧱 3-Layer Architecture</div>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="hero-card card">
+          <h3>Live Metrics</h3>
+          <div class="sensor-row hero-metrics">
+            <div class="metric"><div id="hrMetric" class="metric-value">--</div><div class="metric-label">HR</div></div>
+            <div class="metric"><div id="tempMetric" class="metric-value">--</div><div class="metric-label">Temp</div></div>
+            <div class="metric"><div id="humMetric" class="metric-value">--</div><div class="metric-label">Humidity</div></div>
+          </div>
+          <div style="margin-top:10px; display:flex; gap:8px;">
+            <button id="startStreamHero" class="btn">Start Stream</button>
+            <input id="streamLenHero" class="stream-input" type="number" min="1" max="30" value="6" />
+          </div>
+          <div id="streamLogHero" class="stream-log" style="margin-top:8px"></div>
+        </div>
+      </div>
     </div>
   </header>
 
+  <!-- MAIN GRID -->
   <main class="container grid">
+    <!-- User Input -->
     <section class="card">
       <h2>User Input</h2>
       <form id="inputForm">
@@ -61,21 +98,13 @@
       </form>
     </section>
 
+    <!-- Right column: Sensor + Chart -->
     <aside class="card">
       <h2>Simulated Sensors</h2>
       <div class="sensor-row">
-        <div class="metric">
-          <div id="hrMetric" class="metric-value">--</div>
-          <div class="metric-label">Heart Rate</div>
-        </div>
-        <div class="metric">
-          <div id="tempMetric" class="metric-value">--</div>
-          <div class="metric-label">Temperature</div>
-        </div>
-        <div class="metric">
-          <div id="humMetric" class="metric-value">--</div>
-          <div class="metric-label">Humidity</div>
-        </div>
+        <div class="metric"><div id="hrMetricAside" class="metric-value">--</div><div class="metric-label">Heart Rate</div></div>
+        <div class="metric"><div id="tempMetricAside" class="metric-value">--</div><div class="metric-label">Temperature</div></div>
+        <div class="metric"><div id="humMetricAside" class="metric-value">--</div><div class="metric-label">Humidity</div></div>
       </div>
 
       <div class="form-row">
@@ -84,8 +113,12 @@
       </div>
 
       <div id="streamLog" class="stream-log"></div>
+      <div style="margin-top:12px;">
+        <canvas id="metricsChart" height="140"></canvas>
+      </div>
     </aside>
 
+    <!-- Dosha Analysis & Recs -->
     <section class="card wide">
       <h2>Dosha Analysis & Recommendations</h2>
       <div id="resultPanel" class="result-panel">
@@ -94,40 +127,85 @@
           <h3 id="finalPred">Final: —</h3>
           <div id="votesArea" class="votes-area"></div>
           <p id="explanation" class="muted"></p>
+
+          <div class="xai-box card">
+            <h4>Explainable AI — Key Influencers</h4>
+            <ul id="xaiList" class="muted" style="margin-top:6px"></ul>
+          </div>
         </div>
         <div class="result-right">
           <h3>Recommendations</h3>
           <div id="recs"></div>
         </div>
       </div>
-
-      <div class="charts">
-        <canvas id="metricsChart" height="120"></canvas>
-      </div>
     </section>
 
+    <!-- Sample -->
     <section class="card wide">
       <h2>Sample Dataset & Dashboard</h2>
       <p class="muted">Data used for toy model demo (small sample). Replace with clinical dataset for production.</p>
       <div id="sampleTable" class="table"></div>
     </section>
 
+    <!-- Adaptive Feedback -->
+    <section class="card wide feedback">
+      <h2>Adaptive Learning & Feedback</h2>
+      <p class="muted">Rate how helpful today’s recommendations were:</p>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <input type="range" id="feedbackSlider" min="1" max="5" value="3" />
+        <span id="feedbackValue">3</span>
+        <button class="btn" id="submitFeedback">Submit Feedback</button>
+      </div>
+      <p id="feedbackMsg" class="muted" style="margin-top:8px"></p>
+    </section>
+
+    <!-- Architecture -->
+    <section id="architecture" class="card wide architecture">
+      <h2>Three-Layer System Architecture</h2>
+
+      <div class="arch-grid">
+        <div class="arch-box">
+          <h3>1. Data Acquisition Layer</h3>
+          <p>Manual inputs, simulated sensors, IoT-ready design (smartwatch/health-band ready).</p>
+        </div>
+
+        <div class="arch-box">
+          <h3>2. AI Processing Layer</h3>
+          <p>
+            Hybrid model using:
+            <ul>
+              <li>Weighted-score inference (client-side demo)</li>
+              <li>Rule-based Ayurvedic logic</li>
+              <li>Knowledge fusion engine (KB of food → dosha mapping)</li>
+            </ul>
+          </p>
+        </div>
+
+        <div class="arch-box">
+          <h3>3. Recommendation Layer</h3>
+          <p>Dosha classification + personalized diet, herbs, yoga, routine. Explainable outputs for interpretability.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Docs -->
     <section class="card wide">
       <h2>System Docs</h2>
       <ul>
-        <li><strong>Block diagram:</strong> Input → Preprocess → Model (weighted-score) → Rule Engine → KB → Recommendations → UI</li>
+        <li><strong>Block diagram:</strong> Input → Preprocess → Model → Rule Engine → KB → Recommendations → UI</li>
         <li><strong>Sequence:</strong> User → Web UI → JS processor → KB → Response</li>
-        <li>Include your report diagrams (block, use-case, sequence) as images in the report to match Chapter 4.</li>
+        <li>Add your report diagrams/images in this section for the review.</li>
       </ul>
     </section>
   </main>
 
   <footer class="site-footer">
     <div class="container">
-      <small>AgnoSutra Prototype • Demonstration-only model • Replace scoring with ML model for production</small>
+      <small>AgnoSutra Prototype • Frontend demo • Replace scoring with ML model for production</small>
     </div>
   </footer>
 
+  <!-- main script -->
   <script src="script.js"></script>
 </body>
 </html>
